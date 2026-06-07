@@ -21,7 +21,7 @@ function playGame() {
     }
 }
 
-playGame()
+// playGame()
 
 function playRound(playerChoise, robotChoise) {
     if (playerChoise == 'rock') {
