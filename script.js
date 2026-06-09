@@ -1,27 +1,60 @@
 let robotScore = 0;
 let playerScore = 0;
 
-function playGame() {
+const plrScoreLabel = document.querySelector("#player-score");
+const rbtScoreLabel = document.querySelector("#robot-score");
+const plrDisplay = document.querySelector("#player-display");
+const rbtDisplay = document.querySelector("#robot-display");
+
+const resultDisplay = document.querySelector("#result");
+const playBtn = document.querySelector("#play");
+const overalLabel = document.querySelector("#overal");
+
+const buttons = [
+    { element: document.querySelector("#rock"), value: "rock" },
+    { element: document.querySelector("#paper"), value: "paper" },
+    { element: document.querySelector("#scissors"), value: "scissors" }
+]
+
+async function playGame() {
+    resultDisplay.setAttribute("style", "display: none;")
     robotScore = 0;
     playerScore = 0;
+    updateUI("none","none")
 
     for (let i = 0; i < 5; i++) {
-        let playerChoise = getPlayerChoise()
+        let playerChoise = await getPlayerChoise()
         let robotChoise = getRobotChoise()
-        playRound(playerChoise,robotChoise);
+        playRound(playerChoise, robotChoise);
+        updateUI(playerChoise, robotChoise);
     }
 
     console.log("==== OVERAL GAME ====")
-    if (playerScore > robotScore){
+    if (playerScore > robotScore) {
         console.log("PLAYER WIN!")
+        overalLabel.textContent = "PLAYER WIN!";
     } else if (playerScore < robotScore) {
         console.log("ROBOT WIN!")
-    } else{
+        overalLabel.textContent = "ROBOT WIN!"
+    } else {
         console.log("DRAW!!!!")
+        overalLabel.textContent = "DRAW!!!!";
     }
+
+    resultDisplay.setAttribute("style", "display: block;");
 }
 
-// playGame()
+playBtn.addEventListener("click", () => playGame());
+
+playGame()
+
+function updateUI(playerChoise, robotChoise) {
+    plrScoreLabel.textContent = "score : " + playerScore;
+    rbtScoreLabel.textContent = "score : " + robotScore;
+
+    plrDisplay.innerHTML = playerChoise.toUpperCase();
+    rbtDisplay.innerHTML = robotChoise.toUpperCase();
+}
 
 function playRound(playerChoise, robotChoise) {
     if (playerChoise == 'rock') {
@@ -56,6 +89,7 @@ function playRound(playerChoise, robotChoise) {
         }
     }
 
+    console.log(playerChoise)
     console.log('Player Choose : ' + playerChoise);
     console.log('Robot Choose : ' + robotChoise)
     console.log("Player Score : " + playerScore);
@@ -63,15 +97,9 @@ function playRound(playerChoise, robotChoise) {
     console.log("=================================")
 }
 
-function getPlayerChoise() {
-    do {
-        let input = prompt("Input Rock | Paper | Scissors").toLocaleLowerCase();
-        if (input == 'rock' || input == 'paper' || input == 'scissors') {
-            return input;
-        } else {
-            console.warn('Invalid Input')
-        }
-    } while (true);
+async function getPlayerChoise() {
+    const choise = await waitForAnyButton(buttons);
+    return choise;
 }
 
 function getRobotChoise() {
@@ -94,3 +122,24 @@ function getRobotChoise() {
     }
 }
 
+function waitForAnyButton(buttons) {
+    // Store Listener To Remove it Later
+    const listeners = [];
+
+    const promises = buttons.map(({ element, value }) => {
+        return new Promise((resolve) => {
+            const listener = () => {
+                // Remove All Listener
+                listeners.forEach(({ el, fn }) => {
+                    el.removeEventListener("click", fn);
+                });
+                resolve(value);
+            };
+
+            listeners.push({ el: element, fn: listener });
+            element.addEventListener("click", listener);
+        });
+    });
+
+    return Promise.race(promises);
+}
